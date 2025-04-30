@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ../ai-matching-job-app
+      dockerfile: Dockerfile
+    ports:
+      - "3010:3000" # Expose the frontend on port 3010
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8010
+    volumes:
+      - ../ai-matching-job-app:/app # Mount the local app directory
+      - /app/node_modules # Prevent overwriting node_modules
+    command: npm run dev # Use the development server for hot reloading
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ../ai-matching-job-api
+      dockerfile: Dockerfile
+    ports:
+      - "8010:8000" # Expose the backend on port 8010
+    volumes:
+      - ../ai-matching-job-api:/app # Mount the local API directory
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/ai_matching # Use the Docker service name and internal port
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload # Enable FastAPI hot reload
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:5.0
+    container_name: mongo
+    ports:
+      - "27010:27017" # Expose MongoDB on port 27010
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
