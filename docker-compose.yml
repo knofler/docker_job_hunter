@@ -17,6 +17,7 @@ services:
       - backend
 
   backend:
+    platform: linux/amd64
     build:
       context: ../ai-matching-job-api
       dockerfile: Dockerfile
@@ -25,18 +26,37 @@ services:
     volumes:
       - ../ai-matching-job-api:/app # Mount the local API directory
     environment:
-      - MONGO_URI=mongodb://mongo:27017/ai_matching # Use the Docker service name and internal port
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload # Enable FastAPI hot reload
+      - MONGO_URI=mongodb://mongo:27017/ai_matching
+      - SELENIUM_HOST=selenium # Hostname of the Selenium container
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       - mongo
+      - selenium
+
+  selenium:
+    image: selenium/standalone-chrome:4.10.0-20230607
+    container_name: selenium
+    platform: linux/amd64
+    ports:
+      - "4444:4444" # Expose Selenium Grid port
+    shm_size: 4g # Increase shared memory size to avoid Chrome crashes
+    environment:
+      - SE_OPTS=--max-sessions 1 # Limit to one session for simplicity
+    deploy:
+      resources:
+        limits:
+          memory: 2g # Limit memory usage to 2GB
+          cpus: "1.0" # Limit CPU usage to 1 core
+    restart: always # Ensure the Selenium container restarts if it crashes
 
   mongo:
-    image: mongo:5.0
+    image: mongo:6.0
     container_name: mongo
     ports:
       - "27010:27017" # Expose MongoDB on port 27010
     volumes:
       - mongo_data:/data/db
+    restart: always # Ensure the MongoDB container restarts if it crashes
 
 volumes:
   mongo_data:
