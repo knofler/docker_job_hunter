@@ -1,3 +1,5 @@
+# Ignore VS Code workspace files
+JOB_HUNTER.code-workspace
 # Ignore Docker-related files
 *.log
 *.pid
