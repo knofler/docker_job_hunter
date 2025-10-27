@@ -6,4 +6,5 @@ JOB_HUNTER.code-workspace
 *.sock
 .env
 .env.*
+!.env.example
 docker-compose.override.yml
