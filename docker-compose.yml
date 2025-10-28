@@ -9,6 +9,8 @@ services:
       - "3010:3000" # Expose the frontend on port 3010
     env_file:
       - .env
+    environment:
+      NEXT_DISABLE_TURBOPACK: "1" # Turbopack struggles with shared volumes; fall back to webpack
     volumes:
       - ../ai-matching-job-app:/app # Mount the local app directory
       - /app/node_modules # Prevent overwriting node_modules
