@@ -19,3 +19,17 @@ This repository contains the Docker Compose configuration to orchestrate the fro
 1. Build and start all services:
    ```bash
    docker-compose up --build
+   ```
+
+## Automation shortcuts
+
+Install `just` (`brew install just`) and use the predefined recipes:
+
+```bash
+just dev     # docker compose up --build (interactive)
+just up      # docker compose up --build -d
+just logs    # docker compose logs -f
+just verify  # docker compose config
+just nuke    # docker compose down --volumes --remove-orphans
+just pr-draft  # gh pr create --draft --fill
+```
