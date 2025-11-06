@@ -5,6 +5,16 @@ services:
     build:
       context: ../ai-matching-job-app
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_ADMIN_TOKEN: ${NEXT_PUBLIC_ADMIN_TOKEN}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_API_URL_LOCAL: ${NEXT_PUBLIC_API_URL_LOCAL}
+        NEXT_PUBLIC_API_URL_INTERNAL: ${NEXT_PUBLIC_API_URL_INTERNAL}
+        NEXT_PUBLIC_API_FORCE_REMOTE: ${NEXT_PUBLIC_API_FORCE_REMOTE}
+        AUTH0_BASE_URL: ${AUTH0_BASE_URL}
+        AUTH0_ISSUER_BASE_URL: ${AUTH0_ISSUER_BASE_URL}
+        AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
+        AUTH0_AUDIENCE: ${AUTH0_AUDIENCE}
     ports:
       - "3010:3000" # Expose the frontend on port 3010
     env_file:
