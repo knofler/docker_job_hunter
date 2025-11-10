@@ -31,6 +31,38 @@ nuke:
 verify:
 	docker compose config
 
-# Draft a PR for infrastructure changes
-pr-draft:
-	gh pr create --draft --fill
+# Run backend tests in Docker
+test-backend:
+	docker compose --profile test run --rm test-backend
+
+# Run frontend tests in Docker
+test-frontend:
+	docker compose --profile test run --rm test-frontend
+
+# Run all tests (backend + frontend)
+test: test-backend test-frontend
+
+# Run linting for both services
+lint:
+	@echo "Linting backend..."
+	docker compose run --rm api just lint
+	@echo "Linting frontend..."
+	docker compose run --rm app npm run lint
+
+# Run integration tests against running stack
+integration-test:
+	docker run --rm --network ai-matching-job-docker_default \
+		-v $(pwd)/integration_tests.py:/app/integration_tests.py \
+		-v $(pwd)/requirements.test.txt:/app/requirements.test.txt \
+		-w /app \
+		python:3.12-slim \
+		sh -c "pip install -r requirements.test.txt && python integration_tests.py"
+
+# Run integration tests with verbose output
+integration-test-verbose:
+	docker run --rm --network ai-matching-job-docker_default \
+		-v $(pwd)/integration_tests.py:/app/integration_tests.py \
+		-v $(pwd)/requirements.test.txt:/app/requirements.test.txt \
+		-w /app \
+		python:3.12-slim \
+		sh -c "pip install -r requirements.test.txt && python integration_tests.py --verbose"
