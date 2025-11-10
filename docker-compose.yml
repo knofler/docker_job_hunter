@@ -135,3 +135,5 @@ services:
       - selenium
     profiles:
       - test
+volumes:
+  mongo_data:
