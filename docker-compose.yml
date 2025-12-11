@@ -11,6 +11,7 @@ services:
         NEXT_PUBLIC_API_URL_LOCAL: ${NEXT_PUBLIC_API_URL_LOCAL}
         NEXT_PUBLIC_API_URL_INTERNAL: ${NEXT_PUBLIC_API_URL_INTERNAL}
         NEXT_PUBLIC_API_FORCE_REMOTE: ${NEXT_PUBLIC_API_FORCE_REMOTE}
+        NEXT_PUBLIC_USE_DUMMY_DATA: ${NEXT_PUBLIC_USE_DUMMY_DATA}
         AUTH0_BASE_URL: ${AUTH0_BASE_URL}
         AUTH0_ISSUER_BASE_URL: ${AUTH0_ISSUER_BASE_URL}
         AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
@@ -19,11 +20,12 @@ services:
       - "3010:3000" # Expose the frontend on port 3010
     env_file:
       - .env
-    environment:
-      NEXT_DISABLE_TURBOPACK: "1" # Turbopack struggles with shared volumes; fall back to webpack
+    # environment:
+      # NEXT_DISABLE_TURBOPACK: "1" # Turbopack struggles with shared volumes; fall back to webpack
     volumes:
       - ../ai-matching-job-app:/app # Mount the local app directory
       - /app/node_modules # Prevent overwriting node_modules
+      - /app/.next # Exclude .next directory to allow container to generate build files
     command: npm run dev # Use the development server for hot reloading
     depends_on:
       - backend
@@ -100,6 +102,7 @@ services:
         NEXT_PUBLIC_API_URL_LOCAL: ${NEXT_PUBLIC_API_URL_LOCAL}
         NEXT_PUBLIC_API_URL_INTERNAL: ${NEXT_PUBLIC_API_URL_INTERNAL}
         NEXT_PUBLIC_API_FORCE_REMOTE: ${NEXT_PUBLIC_API_FORCE_REMOTE}
+        NEXT_PUBLIC_USE_DUMMY_DATA: ${NEXT_PUBLIC_USE_DUMMY_DATA}
         AUTH0_BASE_URL: ${AUTH0_BASE_URL}
         AUTH0_ISSUER_BASE_URL: ${AUTH0_ISSUER_BASE_URL}
         AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
