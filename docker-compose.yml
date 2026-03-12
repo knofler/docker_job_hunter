@@ -68,10 +68,13 @@ services:
     image: mongo:6.0
     container_name: mongo
     ports:
-      - "27010:27017" # Expose MongoDB on port 27010
+      - "27010:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-jobhunter}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme-rotate-this}
     volumes:
       - mongo_data:/data/db
-    restart: always # Ensure the MongoDB container restarts if it crashes
+    restart: always
 
   # Test services
   test-backend:
@@ -85,7 +88,7 @@ services:
       - .env
     environment:
       SELENIUM_HOST: selenium
-      MONGO_URI: mongodb://mongo:27017/jobhunter-test
+      MONGO_URI: mongodb://${MONGO_ROOT_USER:-jobhunter}:${MONGO_ROOT_PASSWORD:-changeme-rotate-this}@mongo:27017/jobhunter-test?authSource=admin
     depends_on:
       - mongo
       - selenium
