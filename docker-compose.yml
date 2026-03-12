@@ -69,9 +69,10 @@ services:
     container_name: mongo
     ports:
       - "27010:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-jobhunter}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme-rotate-this}
+    # Auth enabled for production — set MONGO_ROOT_USER/PASSWORD in .env
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-jobhunter}
+    #   MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme-rotate-this}
     volumes:
       - mongo_data:/data/db
     restart: always
