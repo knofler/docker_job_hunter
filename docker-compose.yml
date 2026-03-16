@@ -6,7 +6,6 @@ services:
       context: ../ai-matching-job-app
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_ADMIN_TOKEN: ${NEXT_PUBLIC_ADMIN_TOKEN}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
         NEXT_PUBLIC_API_URL_LOCAL: ${NEXT_PUBLIC_API_URL_LOCAL}
         NEXT_PUBLIC_API_URL_INTERNAL: ${NEXT_PUBLIC_API_URL_INTERNAL}
@@ -17,18 +16,26 @@ services:
         AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
         AUTH0_AUDIENCE: ${AUTH0_AUDIENCE}
     ports:
-      - "3010:3000" # Expose the frontend on port 3010
+      - "3010:3000"
     env_file:
       - .env
     environment:
-      NEXT_DISABLE_TURBOPACK: "1" # Turbopack struggles with shared volumes; fall back to webpack
+      NEXT_DISABLE_TURBOPACK: "1"
     volumes:
-      - ../ai-matching-job-app:/app # Mount the local app directory
-      - /app/node_modules # Prevent overwriting node_modules
-      - /app/.next # Exclude .next directory to allow container to generate build files
-    command: npm run dev # Use the development server for hot reloading
+      - ../ai-matching-job-app:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   backend:
     platform: linux/amd64
@@ -36,46 +43,63 @@ services:
       context: ../ai-matching-job-api
       dockerfile: Dockerfile
     ports:
-      - "8010:8000" # Expose the backend on port 8010
+      - "8010:8000"
     volumes:
-      - ../ai-matching-job-api:/app # Mount the local API directory
+      - ../ai-matching-job-api:/app
     env_file:
       - .env
     environment:
       SELENIUM_HOST: selenium
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
-      - mongo
-      - selenium
+      mongo:
+        condition: service_healthy
+      selenium:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   selenium:
     image: selenium/standalone-chrome:4.10.0-20230607
     container_name: selenium
     platform: linux/amd64
     ports:
-      - "4444:4444" # Expose Selenium Grid port
-    shm_size: 4g # Increase shared memory size to avoid Chrome crashes
+      - "4444:4444"
+    shm_size: 4g
     environment:
-      - SE_OPTS=--max-sessions 1 # Limit to one session for simplicity
+      - SE_OPTS=--max-sessions 1
     deploy:
       resources:
         limits:
-          memory: 2g # Limit memory usage to 2GB
-          cpus: "1.0" # Limit CPU usage to 1 core
-    restart: always # Ensure the Selenium container restarts if it crashes
+          memory: 2g
+          cpus: "1.0"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/wd/hub/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   mongo:
     image: mongo:6.0
     container_name: mongo
     ports:
       - "27010:27017"
-    # Auth enabled for production — set MONGO_ROOT_USER/PASSWORD in .env
-    # environment:
-    #   MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-jobhunter}
-    #   MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme-rotate-this}
     volumes:
       - mongo_data:/data/db
-    restart: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   # Test services
   test-backend:
@@ -91,8 +115,10 @@ services:
       SELENIUM_HOST: selenium
       MONGO_URI: mongodb://${MONGO_ROOT_USER:-jobhunter}:${MONGO_ROOT_PASSWORD:-changeme-rotate-this}@mongo:27017/jobhunter-test?authSource=admin
     depends_on:
-      - mongo
-      - selenium
+      mongo:
+        condition: service_healthy
+      selenium:
+        condition: service_healthy
     profiles:
       - test
 
@@ -101,7 +127,6 @@ services:
       context: ../ai-matching-job-app
       dockerfile: Dockerfile.test
       args:
-        NEXT_PUBLIC_ADMIN_TOKEN: ${NEXT_PUBLIC_ADMIN_TOKEN}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
         NEXT_PUBLIC_API_URL_LOCAL: ${NEXT_PUBLIC_API_URL_LOCAL}
         NEXT_PUBLIC_API_URL_INTERNAL: ${NEXT_PUBLIC_API_URL_INTERNAL}
@@ -117,29 +142,31 @@ services:
     env_file:
       - .env
     depends_on:
-      - test-backend
+      test-backend:
+        condition: service_started
     profiles:
       - test
 
-  # Test runner service that executes tests after services are ready
   test-runner:
     image: alpine:latest
     container_name: test-runner
     command: >
       sh -c "
-        echo 'Waiting for services to be ready...' &&
-        sleep 30 &&
-        echo 'Running frontend tests...' &&
+        echo 'Services are ready, running tests...' &&
         docker-compose --profile test run --rm test-frontend &&
         echo 'Frontend tests completed successfully!' &&
         echo 'Note: Backend tests have known event loop issues in Docker containers' &&
         echo 'Backend functionality verified via health check and application endpoints'
       "
     depends_on:
-      - frontend
-      - backend
-      - mongo
-      - selenium
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      selenium:
+        condition: service_healthy
     profiles:
       - test
 volumes:
