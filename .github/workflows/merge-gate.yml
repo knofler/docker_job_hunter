@@ -1,0 +1,31 @@
+# Template: Copy to .github/workflows/merge-gate.yml
+# No placeholders — this file is the same for all repos.
+#
+# Purpose: Enforce that PRs to main come only from the test branch
+# or hotfix/* branches. This prevents accidental feature/* -> main merges.
+#
+# Usage in init_ai.sh:
+#   cp AI/templates/merge-gate.yml .github/workflows/merge-gate.yml
+
+name: Merge Gate
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  require-test-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check source branch
+        run: |
+          SOURCE="${{ github.head_ref }}"
+          if [[ "$SOURCE" != "test" && ! "$SOURCE" =~ ^hotfix/ ]]; then
+            echo "::error::PRs to main must come from 'test' branch or 'hotfix/*' branches."
+            echo ""
+            echo "Branch '$SOURCE' is not allowed to merge directly into main."
+            echo "Please merge into 'test' first, verify on staging, then PR test -> main."
+            exit 1
+          fi
+          echo "Source branch '$SOURCE' is allowed. Proceeding."
