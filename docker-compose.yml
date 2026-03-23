@@ -21,11 +21,7 @@ services:
       - .env
     environment:
       NEXT_DISABLE_TURBOPACK: "1"
-    volumes:
-      - ../ai-matching-job-app:/app
-      - /app/node_modules
-      - /app/.next
-    command: npm run dev
+    command: npm run start
     depends_on:
       backend:
         condition: service_healthy
@@ -44,13 +40,15 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8010:8000"
-    volumes:
-      - ../ai-matching-job-api:/app
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     env_file:
       - .env
     environment:
       SELENIUM_HOST: selenium
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     depends_on:
       mongo:
         condition: service_healthy
