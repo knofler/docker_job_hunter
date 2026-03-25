@@ -8,7 +8,7 @@ Set these in Vercel dashboard under Project Settings > Environment Variables:
 ```bash
 NEXT_PUBLIC_API_URL=https://your-render-app.onrender.com
 NEXT_PUBLIC_API_FORCE_REMOTE=1
-NEXT_PUBLIC_ADMIN_TOKEN=your-secure-admin-token-here
+ADMIN_TOKEN=your-secure-admin-token-here
 
 # Auth0 (if using)
 AUTH0_SECRET=your-auth0-secret
@@ -63,7 +63,7 @@ DEEPSEEK_BASE_URL=https://api.deepseek.com
    openssl rand -hex 32
    ```
 
-2. **Token consistency**: Ensure `NEXT_PUBLIC_ADMIN_TOKEN` in Vercel matches `ADMIN_API_KEY` in Render
+2. **Token consistency**: Ensure `ADMIN_TOKEN` in Vercel matches `ADMIN_API_KEY` in Render
 
 3. **CORS**: Update `CORS_ALLOW_ORIGINS` with your actual Vercel domain
 
