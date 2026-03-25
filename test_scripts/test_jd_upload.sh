@@ -14,13 +14,13 @@
 # Load environment from .env if available
 ENV_FILE=".env"
 if [ -f "$ENV_FILE" ]; then
-  export $(grep "^TEST_JDS_PATH\|^API_URL\|^ADMIN_TOKEN\|^NEXT_PUBLIC_ADMIN_TOKEN" "$ENV_FILE" 2>/dev/null | xargs)
+  export $(grep "^TEST_JDS_PATH\|^API_URL\|^ADMIN_TOKEN" "$ENV_FILE" 2>/dev/null | xargs)
 fi
 
 # Set defaults
 JDS_PATH="${TEST_JDS_PATH:-../sample_files/JD}"
 API_URL="${API_URL:-http://localhost:8010}"
-ADMIN_TOKEN="${ADMIN_TOKEN:-${NEXT_PUBLIC_ADMIN_TOKEN:-changeme-admin-token}}"
+ADMIN_TOKEN="${ADMIN_TOKEN:-changeme-admin-token}"
 
 # Resolve to absolute path if needed
 if [[ "$JDS_PATH" = ../* ]]; then

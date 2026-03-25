@@ -14,13 +14,13 @@
 # Load environment from .env if available
 ENV_FILE=".env"
 if [ -f "$ENV_FILE" ]; then
-  export $(grep "^TEST_RESUMES_PATH\|^API_URL\|^ADMIN_TOKEN\|^NEXT_PUBLIC_ADMIN_TOKEN" "$ENV_FILE" 2>/dev/null | xargs)
+  export $(grep "^TEST_RESUMES_PATH\|^API_URL\|^ADMIN_TOKEN" "$ENV_FILE" 2>/dev/null | xargs)
 fi
 
 # Set defaults
 RESUMES_PATH="${TEST_RESUMES_PATH:-../sample_files/RESUME}"
 API_URL="${API_URL:-http://localhost:8010}"
-ADMIN_TOKEN="${ADMIN_TOKEN:-${NEXT_PUBLIC_ADMIN_TOKEN:-changeme-admin-token}}"
+ADMIN_TOKEN="${ADMIN_TOKEN:-changeme-admin-token}"
 
 # Resolve to absolute path if needed
 if [[ "$RESUMES_PATH" = ../* ]]; then
