@@ -51,7 +51,7 @@ lint:
 
 # Run integration tests against running stack
 integration-test:
-	docker run --rm --network ai-matching-job-docker_default \
+	docker run --rm --network job-hunter-docker_default \
 		-v $(pwd)/integration_tests.py:/app/integration_tests.py \
 		-v $(pwd)/requirements.test.txt:/app/requirements.test.txt \
 		-w /app \
@@ -60,7 +60,7 @@ integration-test:
 
 # Run integration tests with verbose output
 integration-test-verbose:
-	docker run --rm --network ai-matching-job-docker_default \
+	docker run --rm --network job-hunter-docker_default \
 		-v $(pwd)/integration_tests.py:/app/integration_tests.py \
 		-v $(pwd)/requirements.test.txt:/app/requirements.test.txt \
 		-w /app \
