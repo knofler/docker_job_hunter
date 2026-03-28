@@ -1,7 +1,8 @@
-version: "3.8"
+name: ai-matching-job
 
 services:
-  frontend:
+  ai-matching-job-app:
+    container_name: ai-matching-job-app
     build:
       context: ../ai-matching-job-app
       dockerfile: Dockerfile
@@ -23,7 +24,7 @@ services:
       NEXT_DISABLE_TURBOPACK: "1"
     command: npm run start
     depends_on:
-      backend:
+      ai-matching-job-api:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -33,7 +34,8 @@ services:
       retries: 3
       start_period: 30s
 
-  backend:
+  ai-matching-job-api:
+    container_name: ai-matching-job-api
     platform: linux/amd64
     build:
       context: ../ai-matching-job-api
@@ -47,12 +49,12 @@ services:
     env_file:
       - .env
     environment:
-      SELENIUM_HOST: selenium
+      SELENIUM_HOST: ai-matching-job-selenium
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     depends_on:
-      mongo:
+      ai-matching-job-mongo:
         condition: service_healthy
-      selenium:
+      ai-matching-job-selenium:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -62,9 +64,9 @@ services:
       retries: 3
       start_period: 30s
 
-  selenium:
+  ai-matching-job-selenium:
     image: selenium/standalone-chrome:4.10.0-20230607
-    container_name: selenium
+    container_name: ai-matching-job-selenium
     platform: linux/amd64
     ports:
       - "4444:4444"
@@ -84,9 +86,9 @@ services:
       retries: 3
       start_period: 20s
 
-  mongo:
+  ai-matching-job-mongo:
     image: mongo:6.0
-    container_name: mongo
+    container_name: ai-matching-job-mongo
     ports:
       - "27010:27017"
     volumes:
@@ -100,7 +102,8 @@ services:
       start_period: 20s
 
   # Test services
-  test-backend:
+  ai-matching-job-test-backend:
+    container_name: ai-matching-job-test-backend
     platform: linux/amd64
     build:
       context: ../ai-matching-job-api
@@ -110,17 +113,18 @@ services:
     env_file:
       - .env
     environment:
-      SELENIUM_HOST: selenium
-      MONGO_URI: mongodb://${MONGO_ROOT_USER:-jobhunter}:${MONGO_ROOT_PASSWORD:-changeme-rotate-this}@mongo:27017/jobhunter-test?authSource=admin
+      SELENIUM_HOST: ai-matching-job-selenium
+      MONGO_URI: mongodb://${MONGO_ROOT_USER:-jobhunter}:${MONGO_ROOT_PASSWORD:-changeme-rotate-this}@ai-matching-job-mongo:27017/jobhunter-test?authSource=admin
     depends_on:
-      mongo:
+      ai-matching-job-mongo:
         condition: service_healthy
-      selenium:
+      ai-matching-job-selenium:
         condition: service_healthy
     profiles:
       - test
 
-  test-frontend:
+  ai-matching-job-test-frontend:
+    container_name: ai-matching-job-test-frontend
     build:
       context: ../ai-matching-job-app
       dockerfile: Dockerfile.test
@@ -140,46 +144,48 @@ services:
     env_file:
       - .env
     depends_on:
-      test-backend:
+      ai-matching-job-test-backend:
         condition: service_started
     profiles:
       - test
 
-  test-e2e:
+  ai-matching-job-test-e2e:
+    container_name: ai-matching-job-test-e2e
     build:
       context: ../ai-matching-job-app
       dockerfile: Dockerfile.e2e
     environment:
-      PLAYWRIGHT_BASE_URL: http://frontend:3000
+      PLAYWRIGHT_BASE_URL: http://ai-matching-job-app:3000
     depends_on:
-      frontend:
+      ai-matching-job-app:
         condition: service_healthy
-      backend:
+      ai-matching-job-api:
         condition: service_healthy
     profiles:
       - test
 
-  test-runner:
+  ai-matching-job-test-runner:
     image: alpine:latest
-    container_name: test-runner
+    container_name: ai-matching-job-test-runner
     command: >
       sh -c "
         echo 'Services are ready, running tests...' &&
-        docker-compose --profile test run --rm test-frontend &&
+        docker-compose --profile test run --rm ai-matching-job-test-frontend &&
         echo 'Frontend tests completed successfully!' &&
         echo 'Note: Backend tests have known event loop issues in Docker containers' &&
         echo 'Backend functionality verified via health check and application endpoints'
       "
     depends_on:
-      frontend:
+      ai-matching-job-app:
         condition: service_healthy
-      backend:
+      ai-matching-job-api:
         condition: service_healthy
-      mongo:
+      ai-matching-job-mongo:
         condition: service_healthy
-      selenium:
+      ai-matching-job-selenium:
         condition: service_healthy
     profiles:
       - test
+
 volumes:
   mongo_data:
