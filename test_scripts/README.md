@@ -4,7 +4,7 @@ Comprehensive testing scripts for the AI Job Hunter API. All scripts support bot
 
 ## Environment Configuration
 
-Test scripts load configuration from `ai-matching-job-docker/.env`. Key environment variables:
+Test scripts load configuration from `job-hunter-docker/.env`. Key environment variables:
 
 ```bash
 # Required for authentication
@@ -18,7 +18,7 @@ BACKEND_BASE_URL=http://localhost:8010                # Default: http://localhos
 
 ### Setting Up Environment Variables
 
-1. **In `ai-matching-job-docker/.env`** (local development):
+1. **In `job-hunter-docker/.env`** (local development):
    ```bash
    ADMIN_TOKEN=changeme-admin-token
    TEST_RESUMES_PATH=../PARTROCK/SAMPLE_RESUMES
@@ -33,7 +33,7 @@ BACKEND_BASE_URL=http://localhost:8010                # Default: http://localhos
 
 ### Local Development
 
-From the `ai-matching-job-api` directory:
+From the `job-hunter-api` directory:
 
 ```bash
 # Test resume upload endpoint
@@ -45,7 +45,7 @@ From the `ai-matching-job-api` directory:
 
 ### Docker Execution
 
-From the `ai-matching-job-docker` directory:
+From the `job-hunter-docker` directory:
 
 ```bash
 # Start containers if not already running
@@ -192,7 +192,7 @@ TEST_RESUMES_PATH=../PARTROCK/SAMPLE_RESUMES
 ### Docker Execution
 - Docker and Docker Compose installed
 - Backend service running via `docker compose up`
-- Environment variables in `ai-matching-job-docker/.env`
+- Environment variables in `job-hunter-docker/.env`
 
 ## Troubleshooting
 
@@ -203,12 +203,12 @@ TEST_RESUMES_PATH=../PARTROCK/SAMPLE_RESUMES
 **Solution:**
 1. Check TEST_RESUMES_PATH and TEST_JDS_PATH in `.env`:
    ```bash
-   grep TEST_ ../ai-matching-job-docker/.env
+   grep TEST_ ../job-hunter-docker/.env
    ```
 
 2. Verify files exist:
    ```bash
-   ls -la $(cat ../ai-matching-job-docker/.env | grep TEST_RESUMES_PATH | cut -d'=' -f2)
+   ls -la $(cat ../job-hunter-docker/.env | grep TEST_RESUMES_PATH | cut -d'=' -f2)
    ```
 
 3. Update .env with correct paths:
@@ -236,7 +236,7 @@ TEST_RESUMES_PATH=../PARTROCK/SAMPLE_RESUMES
 
 2. Check BACKEND_BASE_URL in `.env`:
    ```bash
-   grep BACKEND_BASE_URL ../ai-matching-job-docker/.env
+   grep BACKEND_BASE_URL ../job-hunter-docker/.env
    ```
 
 3. Restart backend if needed:
@@ -276,9 +276,9 @@ These scripts can be integrated into GitHub Actions or other CI/CD pipelines:
 ```yaml
 # Example GitHub Actions job
 - name: Test Resume Upload
-  working-directory: ai-matching-job-api
+  working-directory: job-hunter-api
   run: |
-    export $(grep -v '^#' ../ai-matching-job-docker/.env | xargs)
+    export $(grep -v '^#' ../job-hunter-docker/.env | xargs)
     ./test_scripts/test_resume_upload.sh
 ```
 
@@ -290,8 +290,8 @@ To create a new test script:
 2. Load environment variables:
    ```bash
    # Load environment from docker compose context
-   if [ -f "../../ai-matching-job-docker/.env" ]; then
-       export $(grep -v '^#' ../../ai-matching-job-docker/.env | xargs)
+   if [ -f "../../job-hunter-docker/.env" ]; then
+       export $(grep -v '^#' ../../job-hunter-docker/.env | xargs)
    fi
    ```
 

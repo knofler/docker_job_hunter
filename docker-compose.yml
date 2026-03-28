@@ -1,9 +1,8 @@
-version: "3.8"
-
 services:
-  frontend:
+  job-hunter-app:
+    container_name: job-hunter-app
     build:
-      context: ../ai-matching-job-app
+      context: ../job-hunter-app
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
@@ -23,20 +22,21 @@ services:
       NEXT_DISABLE_TURBOPACK: "1"
     command: npm run start
     depends_on:
-      backend:
+      job-hunter-api:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 15s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 30s
 
-  backend:
+  job-hunter-api:
+    container_name: job-hunter-api
     platform: linux/amd64
     build:
-      context: ../ai-matching-job-api
+      context: ../job-hunter-api
       dockerfile: Dockerfile
     ports:
       - "8010:8000"
@@ -47,12 +47,12 @@ services:
     env_file:
       - .env
     environment:
-      SELENIUM_HOST: selenium
+      SELENIUM_HOST: job-hunter-selenium
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     depends_on:
-      mongo:
+      job-hunter-mongo:
         condition: service_healthy
-      selenium:
+      job-hunter-selenium:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -62,9 +62,9 @@ services:
       retries: 3
       start_period: 30s
 
-  selenium:
+  job-hunter-selenium:
     image: selenium/standalone-chrome:4.10.0-20230607
-    container_name: selenium
+    container_name: job-hunter-selenium
     platform: linux/amd64
     ports:
       - "4444:4444"
@@ -84,9 +84,9 @@ services:
       retries: 3
       start_period: 20s
 
-  mongo:
+  job-hunter-mongo:
     image: mongo:6.0
-    container_name: mongo
+    container_name: job-hunter-mongo
     ports:
       - "27010:27017"
     volumes:
@@ -100,29 +100,31 @@ services:
       start_period: 20s
 
   # Test services
-  test-backend:
+  job-hunter-test-backend:
+    container_name: job-hunter-test-backend
     platform: linux/amd64
     build:
-      context: ../ai-matching-job-api
+      context: ../job-hunter-api
       dockerfile: Dockerfile.test
     volumes:
-      - ../ai-matching-job-api:/app
+      - ../job-hunter-api:/app
     env_file:
       - .env
     environment:
-      SELENIUM_HOST: selenium
-      MONGO_URI: mongodb://${MONGO_ROOT_USER:-jobhunter}:${MONGO_ROOT_PASSWORD:-changeme-rotate-this}@mongo:27017/jobhunter-test?authSource=admin
+      SELENIUM_HOST: job-hunter-selenium
+      MONGO_URI: mongodb://${MONGO_ROOT_USER:-jobhunter}:${MONGO_ROOT_PASSWORD:-changeme-rotate-this}@job-hunter-mongo:27017/jobhunter-test?authSource=admin
     depends_on:
-      mongo:
+      job-hunter-mongo:
         condition: service_healthy
-      selenium:
+      job-hunter-selenium:
         condition: service_healthy
     profiles:
       - test
 
-  test-frontend:
+  job-hunter-test-frontend:
+    container_name: job-hunter-test-frontend
     build:
-      context: ../ai-matching-job-app
+      context: ../job-hunter-app
       dockerfile: Dockerfile.test
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
@@ -135,37 +137,53 @@ services:
         AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
         AUTH0_AUDIENCE: ${AUTH0_AUDIENCE}
     volumes:
-      - ../ai-matching-job-app:/app
+      - ../job-hunter-app:/app
       - /app/node_modules
     env_file:
       - .env
     depends_on:
-      test-backend:
+      job-hunter-test-backend:
         condition: service_started
     profiles:
       - test
 
-  test-runner:
+  job-hunter-test-e2e:
+    container_name: job-hunter-test-e2e
+    build:
+      context: ../job-hunter-app
+      dockerfile: Dockerfile.e2e
+    environment:
+      PLAYWRIGHT_BASE_URL: http://job-hunter-app:3000
+    depends_on:
+      job-hunter-app:
+        condition: service_healthy
+      job-hunter-api:
+        condition: service_healthy
+    profiles:
+      - test
+
+  job-hunter-test-runner:
     image: alpine:latest
-    container_name: test-runner
+    container_name: job-hunter-test-runner
     command: >
       sh -c "
         echo 'Services are ready, running tests...' &&
-        docker-compose --profile test run --rm test-frontend &&
+        docker-compose --profile test run --rm job-hunter-test-frontend &&
         echo 'Frontend tests completed successfully!' &&
         echo 'Note: Backend tests have known event loop issues in Docker containers' &&
         echo 'Backend functionality verified via health check and application endpoints'
       "
     depends_on:
-      frontend:
+      job-hunter-app:
         condition: service_healthy
-      backend:
+      job-hunter-api:
         condition: service_healthy
-      mongo:
+      job-hunter-mongo:
         condition: service_healthy
-      selenium:
+      job-hunter-selenium:
         condition: service_healthy
     profiles:
       - test
+
 volumes:
   mongo_data:

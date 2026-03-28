@@ -4,11 +4,11 @@ This repository contains the Docker Compose configuration to orchestrate the fro
 
 ## Services
 1. **Frontend**:
-   - Next.js app (`ai-matching-job-app`).
+   - Next.js app (`job-hunter-app`).
    - Accessible at `http://localhost:3000`.
 
 2. **Backend**:
-   - FastAPI app (`ai-matching-job-api`).
+   - FastAPI app (`job-hunter-api`).
    - Accessible at `http://localhost:8000`.
 
 3. **MongoDB**:

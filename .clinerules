@@ -1,0 +1,68 @@
+# job-hunter-docker — AI Agent Instructions
+
+> This file is read automatically by Cline. Follow these instructions for every session.
+
+---
+
+## On Session Start
+
+1. Read `AI/state/STATE.md` and `AI/state/AI_AGENT_HANDOFF.md` for current context
+2. Read `AI/documentation/AI_RULES.md` for tech mandates
+3. Review `AI/documentation/MULTI_AGENT_ROUTING.md` for routing reference
+
+## Specialist Agents (13)
+
+Agent role definitions are in `AI/agents/`. Adopt the relevant specialist role based on the task.
+
+| Agent | Domain |
+|-------|--------|
+| `solution-architect` | ADRs, system design, tech choices |
+| `frontend-specialist` | Next.js, React, Vercel |
+| `api-specialist` | Node.js/Python APIs, REST/GraphQL, Render |
+| `database-specialist` | MongoDB, Mongoose, Atlas |
+| `devops-specialist` | Docker, GitHub Actions, CI/CD |
+| `ui-ux-specialist` | Design system, Tailwind, accessibility |
+| `security-specialist` | OWASP, auth, secrets, rate limiting |
+| `documentation-specialist` | README, API docs, changelogs |
+| `product-manager` | Feature specs, user stories, roadmap |
+| `qa-specialist` | Testing strategy, unit/integration/E2E |
+| `tech-ba` | Requirements, data flows, functional specs |
+| `tech-lead` | Code review, standards, cross-lane coherence |
+| `project-manager` | Delivery, milestones, blockers, STATE.md |
+
+## Quick Keywords
+
+| Keyword | Action |
+|---------|--------|
+| `hello` | Show all available keywords as a table |
+| `agent mode` | Full multi-agent activation — read state, dispatch all lanes in parallel |
+| `session start` | Read state, assess status, identify next priority |
+| `status` | Quick summary: done, in-progress, blocked, next priority |
+| `plan [feature]` | Break down a feature into specs, stories, and ADR before coding |
+| `scaffold [thing]` | Generate boilerplate: scaffold api, scaffold page [name], scaffold schema [name] |
+| `review` | Code review (tech-lead) + test coverage check (qa-specialist) |
+| `audit` | Security (OWASP) + coverage + standards — all in parallel |
+| `ship it` | Commit, push, update state, write handoff, log |
+| `wrap up` | Update state + write handoff. No commit. |
+| `handoff` | Full handoff: update STATE.md + AI_AGENT_HANDOFF.md for next agent |
+| `make prod` | Productionise: Vercel + Atlas + Render deploy |
+
+## State Management
+
+After every significant change, autonomously update `AI/state/STATE.md` with what was done, decisions made, blockers, and next steps. On session end, also update `AI/state/AI_AGENT_HANDOFF.md` with instructions for the next agent.
+
+**NEVER wait for the user to ask you to save state.**
+
+## Critical Rules
+
+- **Docker only**: No local npm/node. Use `docker compose exec` for builds/linting.
+- **Pipeline relay design**: Each pipeline stage only needs its predecessor's output. Never concatenate all prior stages.
+- **60-second timeout**: Pipeline stages must complete within 1 minute.
+- **File ownership**: Follow lane ownership from `AI/documentation/MULTI_AGENT_ROUTING.md`.
+- **Multi-agent protocol**: You share state with other AI agents via the file system. `AI/state/` is the single source of truth.
+
+---
+
+## Logging
+
+Write session logs to `AI/logs/cline.md` with timestamps.
