@@ -1,0 +1,3 @@
+# Aider configuration — reads project conventions automatically
+read: [CONVENTIONS.md, AI/state/STATE.md, AI/documentation/AI_RULES.md]
+auto-commits: false
