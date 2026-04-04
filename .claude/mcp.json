@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "ai-framework": {
+      "url": "http://localhost:3100/mcp"
+    }
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/session/00-project-identity.sh",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/session/01-machine-switch.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/session/02-dropbox-conflicts.sh",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/session/03-docker-health.sh",
+            "timeout": 15000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/session/04-atlas-connectivity.sh",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/session/05-copilot-status.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/session/06-aws-auth.sh",
+            "timeout": 8000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/session/07-azure-auth.sh",
+            "timeout": 8000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/session/08-sona-context-load.sh",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/session/09-docker-naming-enforce.sh",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/pre-tool/01-block-push-main.sh",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/pre-tool/02-commit-msg-lint.sh",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/pre-tool/03-secret-scan.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/pre-tool/05-no-local-npm.sh",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/pre-tool/06-terraform-plan-guard.sh",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/pre-tool/07-terraform-state-lock.sh",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/pre-tool/08-iac-validate.sh",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/pre-tool/09-cloud-cost-guard.sh",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/pre-tool/04-protected-files.sh",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/post-tool/01-tsc-on-commit.sh",
+            "timeout": 60000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/post-tool/02-vercel-status.sh",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/post-tool/03-render-health.sh",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/post-tool/04-gh-actions-status.sh",
+            "timeout": 10000
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/post-tool/05-framework-sync-reminder.sh",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/stop/01-state-save-reminder.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "./hooks/stop/02-sona-session-train.sh",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}
