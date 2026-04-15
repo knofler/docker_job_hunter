@@ -1,13 +1,13 @@
 # Skill: Codebase Scan
 
-> Agent: **solution-architect** (primary), all specialists (parallel dispatch)
-> Triggers: `scan codebase`, `full scan`, `onboard project`
+> Agent: **project-onboarder** (primary), all specialists (parallel dispatch)
+> Triggers: `scan`, `scan codebase`, `full scan`, `onboard project`, `analyze codebase`, `detect stack`
 
 ---
 
 ## Purpose
 
-Perform a comprehensive scan of an entire codebase to understand its structure, detect technologies, identify issues, and produce actionable tasks. This is the entry point for onboarding any new or existing project into the AI management framework.
+Scan any project directory to detect its tech stack, frameworks, dependencies, Docker setup, CI/CD, and produce a comprehensive JSON report. This is the entry point for onboarding any project into the AI management framework.
 
 ---
 
@@ -17,48 +17,86 @@ Perform a comprehensive scan of an entire codebase to understand its structure, 
 |-------|--------|----------|
 | Project root path | User or `config/managed_repos.txt` | Yes |
 | Existing `state/STATE.md` | Auto-detected | No |
-| Previous scan report | `reports/codebase-scan.md` | No |
+| Previous scan report | `AI/scan-report.json` | No |
 
 ---
 
 ## Steps
 
-### 1. Integrity Gate
-- Invoke `agent-integrity-check` skill before any agent dispatch.
-- If integrity fails, STOP and report. Do not proceed with untrusted agents.
+### 1. Run the Automated Scanner
 
-### 2. Tech Detection
-- Scan for: `package.json`, `requirements.txt`, `Dockerfile`, `docker-compose.yml`, `vercel.json`, `.github/workflows/`, `tsconfig.json`, `tailwind.config.*`, `next.config.*`, `.env*`, `render.yaml`, `mongod` references.
-- Build a technology manifest: language, framework, database, deployment target, CI/CD provider.
-- Write manifest to `reports/tech-manifest.json`.
+```bash
+./scripts/scan-project.sh /path/to/project
+```
 
-### 3. Agent Mapping
-- Map detected technologies to relevant specialist agents using `documentation/MULTI_AGENT_ROUTING.md`.
-- Example: `package.json` with Next.js -> `frontend-specialist`, `ui-ux-specialist`. Dockerfile -> `devops-specialist`. MongoDB connection string -> `database-specialist`.
-- Produce an agent dispatch list.
+Options:
+- `--json` — JSON only output (no pretty print)
+- `--output /custom/path.json` — Custom report location
 
-### 4. Parallel Agent Dispatch
-- Invoke `agent-opinion-gather` skill with the agent dispatch list.
-- Each agent scans ONLY its domain (frontend scans pages/components, devops scans Docker/CI, etc.).
-- Agents run in parallel across lanes A/B/C/D per `MULTI_AGENT_ROUTING.md`.
+Default output: `<project>/AI/scan-report.json`
 
-### 5. Collect Opinions
-- Wait for all dispatched agents to complete.
-- Read each agent's opinion from `reports/agent-opinions/{agent}.md`.
-- Merge into a unified findings list with severity levels: CRITICAL, HIGH, MEDIUM, LOW.
+### 2. Review the Scan Report
 
-### 6. Compile Report
-- Write `reports/codebase-scan.md` with sections: Executive Summary, Tech Stack, Agent Findings (by agent), Consolidated Issues (by severity), Recommendations.
-- Include timestamp and scan duration.
+The report contains these sections:
 
-### 7. Create Tasks
-- Invoke `auto-task-assign` skill with the scan report.
-- PM agent converts findings into structured tasks in `state/tasks.json`.
+| Section | Contents |
+|---------|----------|
+| `project` | Name, path, package info, scan timestamp |
+| `stack.types` | Language types: nodejs, python, nextjs, rust, go, ruby, java |
+| `stack.frameworks` | Next.js, React, Express, FastAPI, Django, Tailwind, Mongoose, etc. |
+| `stack.databases` | MongoDB, PostgreSQL, MySQL, Redis |
+| `stack.auth` | Auth0, NextAuth, Passport, JWT, Clerk, Firebase Auth |
+| `stack.deployment` | Vercel, Render, Docker, GitHub Actions, Fly.io, Netlify |
+| `stack.test_frameworks` | Jest, Vitest, Playwright, Cypress, pytest |
+| `structure` | File counts by type, entry points, API routes, models |
+| `dependencies` | Production/dev dependency counts, npm scripts |
+| `docker` | Dockerfile, docker-compose, services, compose name |
+| `git` | Remote URL, branch, total commits |
+| `ai_framework` | Whether AI/ dir, STATE.md, CLAUDE.md exist |
+| `recommendations` | Gaps: needs Docker, CI, tests, AI framework, env example |
 
-### 8. Present to User
-- Output a summary table: agent, findings count, critical/high issues.
-- Show top 5 priority tasks.
-- Ask user which lane to start executing first.
+### 3. Map Technologies to Agents
+
+Based on the scan, route to relevant specialists:
+
+| Detected | Agent |
+|----------|-------|
+| Next.js / React / TSX files | `frontend-specialist` + `ui-ux-specialist` |
+| Express / FastAPI / API routes | `api-specialist` |
+| MongoDB / Mongoose / models | `database-specialist` |
+| Docker / docker-compose | `devops-specialist` |
+| Auth0 / JWT / NextAuth | `security-specialist` |
+| Test files / Jest / Vitest | `qa-specialist` |
+
+### 4. Act on Recommendations
+
+| Flag | Action |
+|------|--------|
+| `needs_docker: true` | Run `dockerfile-create` skill |
+| `needs_ci: true` | Run `github-actions-pipeline` skill |
+| `needs_tests: true` | Run `test-strategy` skill |
+| `needs_ai_framework: true` | Run `./scripts/init_ai.sh /path/to/project` |
+| `needs_env_example: true` | Create `.env.example` from `.env` |
+
+### 5. Feed into Generation Pipeline (Optional)
+
+For existing projects, use the scan as context for the generator:
+
+```bash
+./scripts/generate-project.sh "enhancement idea" --scan /path/to/project --name project-v2
+```
+
+### 6. Parallel Agent Dispatch (For Deep Scan)
+
+For a thorough analysis beyond the automated scan:
+- Invoke `agent-opinion-gather` skill with the agent dispatch list from Step 3
+- Each agent scans ONLY its domain files
+- Agents run in parallel across lanes A/B/C/D per `MULTI_AGENT_ROUTING.md`
+
+### 7. Update State
+
+- Write findings to `state/STATE.md`
+- Create tasks from recommendations via `auto-task-assign` skill
 
 ---
 
@@ -66,15 +104,14 @@ Perform a comprehensive scan of an entire codebase to understand its structure, 
 
 | Output | Location |
 |--------|----------|
-| Tech manifest | `reports/tech-manifest.json` |
-| Agent opinions | `reports/agent-opinions/{agent}.md` |
-| Full scan report | `reports/codebase-scan.md` |
-| Task board | `state/tasks.json` |
+| Scan report (JSON) | `<project>/AI/scan-report.json` |
+| Console summary | Pretty-printed stack, structure, recommendations |
 
 ---
 
 ## Notes
 
-- First scan of a project may take longer due to full file tree traversal.
-- Subsequent scans diff against the previous `reports/codebase-scan.md` and only re-scan changed areas.
-- Always update `state/STATE.md` after scan completes.
+- The scanner runs as a bash script — no Docker required
+- First scan of a project takes ~2-5 seconds
+- Scan report is consumed by the generation pipeline for context-aware generation
+- Always update `state/STATE.md` after scan completes

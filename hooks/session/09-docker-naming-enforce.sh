@@ -20,8 +20,8 @@ if ! docker info &>/dev/null; then
 fi
 
 # Get project name: prefer `name:` field from docker-compose.yml, fall back to folder name
-# This handles workspace setups where docker-compose is in a sub-repo (e.g., job-hunter-docker/)
-# but the project name and container prefix should be "job-hunter"
+# This handles workspace setups where docker-compose is in a sub-repo (e.g., ai-matching-job-docker/)
+# but the project name and container prefix should be "ai-matching-job"
 COMPOSE_NAME=$(grep -m1 '^name:' "$COMPOSE_FILE" 2>/dev/null | sed 's/^name:[[:space:]]*//' | tr -d ' "'"'"'' | tr -d '\r')
 if [ -n "$COMPOSE_NAME" ]; then
   PROJECT="$COMPOSE_NAME"

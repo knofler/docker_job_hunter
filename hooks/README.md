@@ -1,6 +1,6 @@
 # Claude Code Hooks
 
-> 23 automated hooks that fire during Claude Code sessions. Configured in `.claude/settings.json`.
+> 26 automated hooks that fire during Claude Code sessions. Configured in `.claude/settings.json`.
 
 ## Directory Structure
 
@@ -14,7 +14,7 @@ hooks/
 
 ## Hook Catalog
 
-### Session Start (7 hooks)
+### Session Start (9 hooks)
 
 | # | Script | Purpose | Timeout |
 |---|--------|---------|---------|
@@ -25,8 +25,10 @@ hooks/
 | 5 | `05-copilot-status.sh` | Check GitHub Copilot CLI extension | 5s |
 | 6 | `06-aws-auth.sh` | Verify AWS CLI credentials (`sts get-caller-identity`) | 8s |
 | 7 | `07-azure-auth.sh` | Verify Azure CLI login (`az account show`) | 8s |
+| 8 | `11-yolo-status.sh` | Check YOLO mode state — show active/expired/inactive | 3s |
+| 9 | `12-usage-guard-init.sh` | Initialize session usage metrics (time + action tracking) | 3s |
 
-### Pre-Tool Use (9 hooks)
+### Pre-Tool Use (10 hooks)
 
 These run before Bash/Edit/Write tools. Exit code 2 = **BLOCK** the action.
 
@@ -41,6 +43,7 @@ These run before Bash/Edit/Write tools. Exit code 2 = **BLOCK** the action.
 | 7 | `07-terraform-state-lock.sh` | Warn if terraform state is locked | Warn | 3s |
 | 8 | `08-iac-validate.sh` | Validate CFN/Bicep/CDK templates before deploy | Yes | 10s |
 | 9 | `09-cloud-cost-guard.sh` | Warn about expensive AWS/Azure resource creation | Warn | 3s |
+| 10 | `10-usage-guard.sh` | Track session capacity — warn 80/90%, block at 95% | Yes (95%) | 3s |
 
 ### Post-Tool Use (5 hooks)
 
@@ -60,7 +63,7 @@ These run before Bash/Edit/Write tools. Exit code 2 = **BLOCK** the action.
 
 ## How Hooks Work
 
-- **SessionStart**: All 7 session hooks run on every new session
+- **SessionStart**: All 9 session hooks run on every new session
 - **PreToolUse**: Hooks receive JSON on stdin with `tool_name` and `tool_input`
   - Exit 0 = allow, Exit 2 = block the action
 - **PostToolUse**: Same stdin format, runs after tool succeeds
