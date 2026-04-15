@@ -1,0 +1,18 @@
+{
+  "session_duration_minutes": 240,
+  "max_weighted_actions": 300,
+  "action_weights": {
+    "Bash": 1.0,
+    "Edit": 1.0,
+    "Write": 1.0,
+    "Read": 0.3,
+    "Glob": 0.3,
+    "Grep": 0.3,
+    "Agent": 1.0,
+    "default": 0.5
+  },
+  "warn_at_percent": [80, 90, 95],
+  "block_at_percent": 95,
+  "block_tools": ["Bash", "Edit", "Write", "Agent"],
+  "allow_through_tools": ["Read", "Glob", "Grep"]
+}

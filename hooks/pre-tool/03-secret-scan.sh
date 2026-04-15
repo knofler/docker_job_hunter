@@ -8,8 +8,8 @@ CMD=$(echo "$INPUT" | jq -r '.tool_input.command // ""' 2>/dev/null)
 # Only care about git add and git commit
 [[ "$CMD" != *"git add"* && "$CMD" != *"git commit"* ]] && exit 0
 
-# Block staging .env files explicitly
-[[ "$CMD" == *"git add"*".env"* ]] && echo "BLOCKED: .env files must not be staged" && exit 2
+# Block staging .env files explicitly (allow .env.example)
+[[ "$CMD" == *"git add"*".env"* && "$CMD" != *".env.example"* ]] && echo "BLOCKED: .env files must not be staged" && exit 2
 
 # Block staging credentials
 [[ "$CMD" == *"git add"*".pem"* ]] && echo "BLOCKED: .pem files must not be staged" && exit 2
@@ -23,7 +23,7 @@ fi
 
 # On commit: check staged .env files
 if [[ "$CMD" == *"git commit"* ]]; then
-  ENVSTAGED=$(git diff --cached --name-only 2>/dev/null | grep '\.env' || true)
+  ENVSTAGED=$(git diff --cached --name-only 2>/dev/null | grep -E '\.env$|\.env\.local$|\.env\.production$|\.env\.development$' || true)
   [[ -n "$ENVSTAGED" ]] && echo "BLOCKED: .env staged for commit" && exit 2
 
   # Scan for secret patterns

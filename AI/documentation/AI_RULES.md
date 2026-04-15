@@ -88,3 +88,31 @@ Each specialist agent has 3-5 skills — repeatable playbooks auto-discovered fr
 * **Gemini / Copilot / Other:** `AI/agents/` (adopt roles manually using prompts in those files)
 * **Routing reference:** `AI/documentation/MULTI_AGENT_ROUTING.md`
 * **Skills catalog:** `AI/skills/README.md`
+
+## 6. Tailwind CSS + shadcn/ui (Frontend Standard)
+
+All Next.js projects use **Tailwind CSS v4** + **shadcn/ui**. Full guide: `AI/documentation/DESIGN_SYSTEM.md`.
+
+### Mandatory Rules
+* **Utility-first:** Use Tailwind classes directly in JSX. Do NOT create CSS files for component styling.
+* **No inline styles:** Never use `style={{ }}` props. Use Tailwind classes. Only exception: truly dynamic values (e.g., `style={{ width: \`${percent}%\` }}`).
+* **Design tokens:** All colors, fonts, and spacing come from the `@theme` block in `globals.css`. Never hardcode hex values — use `bg-brand-accent`, not `bg-[#00B14C]`.
+* **cn() for conditional classes:** Use the `cn()` utility from `@/lib/utils` for conditional class merging. Never do string concatenation.
+* **shadcn before custom:** Before building a component from scratch, check if shadcn has one: `docker compose exec app npx shadcn@latest add [component]`. Modify the shadcn component rather than building a parallel one.
+* **Component location:** shadcn components: `src/components/ui/`. Project components: `src/components/`. Never mix them.
+* **Responsive-first:** Mobile layout is the default. Use `md:` and `lg:` prefixes for larger screens.
+* **Dark mode:** Use `dark:` prefix for dark mode variants. Define dark tokens in the CSS config.
+* **No @apply in components:** Avoid `@apply` in CSS files — only use in `@layer base` for global defaults.
+* **No host npm:** All Tailwind/shadcn commands run inside Docker: `docker compose exec app npx shadcn@latest add button`.
+
+### Key Files
+```
+postcss.config.mjs           <-- PostCSS with @tailwindcss/postcss
+src/app/globals.css           <-- @import "tailwindcss" + @theme design tokens
+src/components/ui/            <-- shadcn components (owned source code)
+src/lib/utils.ts              <-- cn() helper
+components.json               <-- shadcn config
+```
+
+### Template Files
+Design templates for new projects: `AI/templates/design/` (postcss.config.mjs, globals.css, utils.ts)
