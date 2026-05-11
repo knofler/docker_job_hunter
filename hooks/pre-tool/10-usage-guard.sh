@@ -32,13 +32,14 @@ elif [[ -f "$ROOT/AI/config/session-limits.json" ]]; then
   CONFIG_FILE="$ROOT/AI/config/session-limits.json"
 fi
 
-# ── Read current metrics ──
-action_count=$(grep '^action_count=' "$METRICS_FILE" | cut -d= -f2)
-weighted_actions=$(grep '^weighted_actions=' "$METRICS_FILE" | cut -d= -f2)
-started_epoch=$(grep '^started_epoch=' "$METRICS_FILE" | cut -d= -f2)
-duration_minutes=$(grep '^duration_minutes=' "$METRICS_FILE" | cut -d= -f2)
-max_weighted_actions=$(grep '^max_weighted_actions=' "$METRICS_FILE" | cut -d= -f2)
-warnings_sent=$(grep '^warnings_sent=' "$METRICS_FILE" | cut -d= -f2)
+# ── Read current metrics (whitespace-tolerant — Claude Code `!` adds indentation) ──
+_get() { sed -n "s/^[[:space:]]*$1=//p" "$METRICS_FILE" | head -1; }
+action_count=$(_get action_count)
+weighted_actions=$(_get weighted_actions)
+started_epoch=$(_get started_epoch)
+duration_minutes=$(_get duration_minutes)
+max_weighted_actions=$(_get max_weighted_actions)
+warnings_sent=$(_get warnings_sent)
 
 # Defaults for safety
 : "${action_count:=0}"
@@ -51,7 +52,7 @@ warnings_sent=$(grep '^warnings_sent=' "$METRICS_FILE" | cut -d= -f2)
 # If the session has expired (e.g. stale file from previous session/machine via Dropbox),
 # reset metrics instead of blocking. This prevents false 95% blocks on new sessions.
 NOW_CHECK=$(date +%s)
-expires_epoch=$(grep '^expires_epoch=' "$METRICS_FILE" | cut -d= -f2)
+expires_epoch=$(_get expires_epoch)
 : "${expires_epoch:=0}"
 if [[ "$NOW_CHECK" -gt "$expires_epoch" && "$expires_epoch" -gt 0 ]]; then
   # Session expired — reset the file
@@ -109,9 +110,9 @@ remaining_actions=$(awk "BEGIN { printf \"%.0f\", $max_weighted_actions - $weigh
 remaining_minutes=$(( (total_seconds - elapsed_seconds) / 60 ))
 [[ "$remaining_minutes" -lt 0 ]] && remaining_minutes=0
 
-# ── Update metrics file ──
-sed -i.bak "s/^action_count=.*/action_count=$action_count/" "$METRICS_FILE"
-sed -i.bak "s/^weighted_actions=.*/weighted_actions=$weighted_actions/" "$METRICS_FILE"
+# ── Update metrics file (whitespace-tolerant sed) ──
+sed -i.bak "s/^[[:space:]]*action_count=.*/action_count=$action_count/" "$METRICS_FILE"
+sed -i.bak "s/^[[:space:]]*weighted_actions=.*/weighted_actions=$weighted_actions/" "$METRICS_FILE"
 rm -f "${METRICS_FILE}.bak"
 
 # ── Check thresholds ──
@@ -120,7 +121,7 @@ EXIT_CODE=0
 if [[ "$usage_pct" -ge 95 ]]; then
   # Record warning
   if [[ "$warnings_sent" != *"95"* ]]; then
-    sed -i.bak "s/^warnings_sent=.*/warnings_sent=${warnings_sent},95/" "$METRICS_FILE"
+    sed -i.bak "s/^[[:space:]]*warnings_sent=.*/warnings_sent=${warnings_sent},95/" "$METRICS_FILE"
     rm -f "${METRICS_FILE}.bak"
   fi
 
@@ -159,7 +160,7 @@ if [[ "$usage_pct" -ge 95 ]]; then
 
 elif [[ "$usage_pct" -ge 90 ]]; then
   if [[ "$warnings_sent" != *"90"* ]]; then
-    sed -i.bak "s/^warnings_sent=.*/warnings_sent=${warnings_sent},90/" "$METRICS_FILE"
+    sed -i.bak "s/^[[:space:]]*warnings_sent=.*/warnings_sent=${warnings_sent},90/" "$METRICS_FILE"
     rm -f "${METRICS_FILE}.bak"
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
@@ -182,7 +183,7 @@ elif [[ "$usage_pct" -ge 90 ]]; then
 
 elif [[ "$usage_pct" -ge 80 ]]; then
   if [[ "$warnings_sent" != *"80"* ]]; then
-    sed -i.bak "s/^warnings_sent=.*/warnings_sent=${warnings_sent},80/" "$METRICS_FILE"
+    sed -i.bak "s/^[[:space:]]*warnings_sent=.*/warnings_sent=${warnings_sent},80/" "$METRICS_FILE"
     rm -f "${METRICS_FILE}.bak"
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
