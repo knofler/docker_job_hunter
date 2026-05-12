@@ -11,6 +11,8 @@
 3. **NEVER commit `node_modules/`, `.env`, or secrets.** Check `.gitignore` before staging.
 4. **Docker container naming:** All `container_name` in `docker-compose.yml` MUST use the **exact folder name** as prefix (preserve casing): `{folderName}-app`, `{folderName}-mongo`, `{folderName}-api`. Example: folder `agentFlow` → `agentFlow-app`, `agentFlow-mongo`. If non-compliant → `docker compose down`, fix names, rebuild.
 5. **Frontend standard: Tailwind CSS + shadcn/ui.** All Next.js projects use Tailwind v4 (CSS-first `@theme` config) + shadcn/ui components. Utility-first classes only — no CSS modules, no styled-components, no inline styles. Design tokens in `globals.css`, shadcn components in `src/components/ui/`, `cn()` helper in `src/lib/utils.ts`. Full guide: `AI/documentation/DESIGN_SYSTEM.md`.
+6. **Git email fix (auto-fix on push failure).** If `git push` fails with `GH007` or `email privacy`, fix immediately — do NOT ask the user. Run: `git config user.email "3438317+knofler@users.noreply.github.com"` then amend with `GIT_COMMITTER_EMAIL="3438317+knofler@users.noreply.github.com" GIT_COMMITTER_NAME="Rumman Ahmed" git commit --amend --no-edit --author="Rumman Ahmed <3438317+knofler@users.noreply.github.com>"`. Both author AND committer must use noreply. Never change `--global` config.
+7. **API documentation is mandatory.** Any project with API endpoints MUST have: (a) OpenAPI 3.0 spec at `/api/openapi.json`, (b) Scalar interactive docs at `/docs` (`@scalar/nextjs-api-reference`), (c) OpenAPI MCP server in `.claude/mcp.json`. Every new endpoint must be added to the OpenAPI spec — undocumented endpoints are not complete. Templates: `AI/templates/api/`.
 
 ---
 
@@ -243,7 +245,9 @@ MCP servers are configured in `.claude/mcp.json` and auto-managed by `update_all
 | Server | Condition | Purpose |
 |--------|-----------|---------|
 | **Chrome DevTools** | Web project (has `next.config.*`, `vercel.json`, or `src/app/layout.tsx`) | Browser console, network, screenshots, error tracking |
+| **Google Stitch** | Web project (auto-added with Chrome DevTools) | AI UI design — generate components from prompts, access design tokens |
 | **Docker** | Docker project (has `docker-compose.yml`) | Container logs, exec, management. Uses `{folderName}-*` naming convention |
+| **OpenAPI** | API project (has `src/app/api/`, `src/routes/`, or `routes/`) | Exposes API endpoints as MCP tools from OpenAPI spec at `/api/openapi.json` |
 
 ### API-Key Servers (Add When Ready)
 See `AI/plan/MCP_SERVERS.md` for the full list: Brave Search, Figma, Sentry, MongoDB Atlas, Vercel, Upstash, Notion, Slack.
@@ -289,6 +293,12 @@ The user may type these short phrases instead of full prompts. Execute the full 
 | `remote` | Start `claude remote-control` for this project. Run `./AI/scripts/remote.sh` — prints QR code/URL to connect from phone, tablet, or browser. Session runs locally. See `AI/documentation/MOBILE_CONTROL.md`. |
 | `telegram setup` | Run guided Telegram bot setup: `./AI/scripts/telegram-setup.sh`. Checks Bun installed, installs plugin, configures bot token, prints next steps for pairing and lockdown. See `AI/documentation/MOBILE_CONTROL.md`. |
 | `telegram start` | Launch Claude Code with Telegram channel active: `claude --channels plugin:telegram@claude-plugins-official`. Requires prior setup via `telegram setup`. |
+| `ai tools` | **Fleet inventory — show 5 of each.** 1. Try live gateway first: `curl -s http://localhost:3100/mcp` for MCP tools, `curl -s http://localhost:3200/api/agents` + `/api/skills` for counts. If gateway down, fall back to reading `AI/agents/`, `AI/skills/`, and the master repo's `runtime/src/mcp/tools.ts`. 2. Print four sections of 5 rows each: **Agents** (name, category, one-line), **Skills** (name, description, triggers), **MCP Tools** (name, category, purpose), **Gateway Routes** (one row per surface: `:3100` MCP, `:3200` REST, `:3201` WS, `:3210` dashboard). 3. End each section with `… N more — run "more <type>" to see all`. Full reference lives in the master repo's README. |
+| `more agents` | Expand the `ai tools` agents block — list all 57 agents grouped by category. |
+| `more skills` | Expand the `ai tools` skills block — list all 135 skills with triggers. |
+| `more mcp` / `more mcp tools` | Expand all 15 MCP tool definitions with input schemas (pull from `http://localhost:3100/mcp` `tools/list`). |
+| `more routes` | Expand every HTTP (`:3200`), WebSocket (`:3201`), MCP (`:3100`), and dashboard (`:3210`) route. |
+| `ai tools help` / `help ai tools` | Print the `ai tools` usage block (default behavior + sub-commands + data sources). |
 | `yolo [minutes]` | **Timed autonomous mode.** `yolo 10` = for the next 10 minutes, do NOT ask any permission or clarifying questions. Execute all actions (file writes, bash commands, git operations, agent dispatches) without pausing. Run `./AI/scripts/yolo.sh start <minutes>`. On every action, check `AI/state/.yolo` — if expired, revert to normal mode. Show a countdown reminder every 3rd action. |
 | `yolo god` | **Full autonomous mode until completion.** No questions asked until the current plan is finished OR the next `git commit` is created — whichever comes first. Run `./AI/scripts/yolo.sh start god`. The agent proceeds with maximum velocity: pick the best approach, execute it, move on. If something fails, diagnose and fix without asking. On commit or plan completion, auto-deactivate by running `./AI/scripts/yolo.sh stop`. |
 | `yolo off` | **Deactivate YOLO mode immediately.** Run `./AI/scripts/yolo.sh stop`. Resume normal permission behavior. |
