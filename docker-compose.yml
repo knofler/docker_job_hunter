@@ -21,6 +21,7 @@ services:
     environment:
       NEXT_DISABLE_TURBOPACK: "1"
     command: npm run start
+    mem_limit: 2g
     depends_on:
       job-hunter-api:
         condition: service_healthy
@@ -49,6 +50,7 @@ services:
     environment:
       SELENIUM_HOST: job-hunter-selenium
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    mem_limit: 2g
     depends_on:
       job-hunter-mongo:
         condition: service_healthy
@@ -71,11 +73,8 @@ services:
     shm_size: 4g
     environment:
       - SE_OPTS=--max-sessions 1
-    deploy:
-      resources:
-        limits:
-          memory: 2g
-          cpus: "1.0"
+    mem_limit: 2g
+    cpus: 1.0
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4444/wd/hub/status"]
@@ -91,6 +90,7 @@ services:
       - "27010:27017"
     volumes:
       - mongo_data:/data/db
+    mem_limit: 2g
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
